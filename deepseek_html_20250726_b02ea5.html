@@ -1,0 +1,1547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ProDesign - Visual Editor</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        :root {
+            --primary: #4361ee;
+            --secondary: #3f37c9;
+            --accent: #4895ef;
+            --dark: #2b2d42;
+            --light: #f8f9fa;
+            --success: #4cc9f0;
+            --danger: #f72585;
+            --warning: #f8961e;
+            --canvas-bg: #f0f2f5;
+            --sidebar-bg: #ffffff;
+            --toolbar-bg: #ffffff;
+            --panel-bg: #ffffff;
+            --header-bg: #ffffff;
+        }
+
+        body {
+            background: #e9ecef;
+            color: var(--dark);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header Styles */
+        header {
+            background: var(--header-bg);
+            padding: 12px 30px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            z-index: 100;
+            position: relative;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo i {
+            font-size: 28px;
+            color: var(--primary);
+        }
+
+        .logo h1 {
+            font-size: 24px;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 15px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--secondary);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(67, 97, 238, 0.3);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--primary);
+            color: var(--primary);
+        }
+
+        .btn-outline:hover {
+            background: rgba(67, 97, 238, 0.1);
+        }
+
+        /* Main Container */
+        .container {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            width: 280px;
+            background: var(--sidebar-bg);
+            padding: 20px 0;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 3px 0 10px rgba(0,0,0,0.05);
+            z-index: 10;
+            overflow-y: auto;
+        }
+
+        .sidebar-section {
+            margin-bottom: 25px;
+            padding: 0 20px;
+        }
+
+        .sidebar-section h2 {
+            font-size: 18px;
+            margin-bottom: 15px;
+            color: var(--dark);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+
+        .tool {
+            background: var(--light);
+            border-radius: 8px;
+            padding: 15px 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 2px solid transparent;
+        }
+
+        .tool:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            border-color: var(--accent);
+        }
+
+        .tool.active {
+            border-color: var(--primary);
+            background: rgba(67, 97, 238, 0.1);
+        }
+
+        .tool i {
+            font-size: 24px;
+            margin-bottom: 8px;
+            color: var(--primary);
+        }
+
+        .tool span {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--dark);
+        }
+
+        .elements-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .element-item {
+            padding: 12px 15px;
+            background: var(--light);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .element-item:hover {
+            background: rgba(67, 97, 238, 0.1);
+        }
+
+        .element-item i {
+            color: var(--primary);
+            font-size: 18px;
+        }
+
+        /* Canvas Area */
+        .canvas-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: var(--canvas-bg);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .canvas-toolbar {
+            padding: 15px 30px;
+            background: var(--toolbar-bg);
+            display: flex;
+            align-items: center;
+            gap: 25px;
+            border-bottom: 1px solid #e9ecef;
+            flex-wrap: wrap;
+        }
+
+        .toolbar-group {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .toolbar-group h3 {
+            font-size: 14px;
+            font-weight: 600;
+            color: #6c757d;
+        }
+
+        .toolbar-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            background: var(--light);
+            color: var(--dark);
+            font-size: 16px;
+            transition: all 0.2s ease;
+        }
+
+        .toolbar-btn:hover {
+            background: var(--primary);
+            color: white;
+            transform: scale(1.05);
+        }
+
+        .color-picker {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: var(--primary);
+            cursor: pointer;
+            border: 2px solid white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        .canvas-area {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 30px;
+            overflow: auto;
+            position: relative;
+        }
+
+        .canvas {
+            width: 800px;
+            height: 500px;
+            background: white;
+            box-shadow: 0 5px 30px rgba(0,0,0,0.1);
+            position: relative;
+            background-image: 
+                linear-gradient(#f0f0f0 1px, transparent 1px),
+                linear-gradient(90deg, #f0f0f0 1px, transparent 1px);
+            background-size: 20px 20px;
+            transform-origin: center;
+        }
+
+        /* Canvas Elements */
+        .element {
+            position: absolute;
+            cursor: move;
+            border: 2px solid transparent;
+            user-select: none;
+        }
+
+        .element.selected {
+            border: 2px dashed var(--primary);
+        }
+
+        .element:hover {
+            border: 2px dashed rgba(67, 97, 238, 0.5);
+        }
+
+        .text-element {
+            padding: 10px;
+            min-width: 100px;
+            min-height: 40px;
+            font-size: 18px;
+            font-weight: 500;
+            color: var(--dark);
+            resize: both;
+            overflow: auto;
+            background: transparent;
+            border: none;
+            outline: none;
+        }
+
+        .shape {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .rectangle {
+            width: 200px;
+            height: 150px;
+        }
+
+        .circle {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+        }
+
+        .triangle {
+            width: 0;
+            height: 0;
+            border-left: 75px solid transparent;
+            border-right: 75px solid transparent;
+            border-bottom: 130px solid var(--warning);
+        }
+
+        .image-element {
+            width: 200px;
+            height: 150px;
+            background: #e9ecef;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #6c757d;
+            font-size: 14px;
+            overflow: hidden;
+        }
+
+        .image-element img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .image-element i {
+            font-size: 40px;
+            color: #adb5bd;
+        }
+
+        /* Properties Panel */
+        .properties-panel {
+            width: 280px;
+            background: var(--panel-bg);
+            padding: 25px 20px;
+            box-shadow: -3px 0 10px rgba(0,0,0,0.05);
+            z-index: 10;
+            overflow-y: auto;
+        }
+
+        .panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .panel-header h2 {
+            font-size: 20px;
+            color: var(--dark);
+        }
+
+        .property-group {
+            margin-bottom: 25px;
+        }
+
+        .property-group h3 {
+            font-size: 16px;
+            margin-bottom: 15px;
+            color: #495057;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .property-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .property-label {
+            width: 120px;
+            font-size: 14px;
+            color: #6c757d;
+        }
+
+        .property-control {
+            flex: 1;
+        }
+
+        input[type="range"], input[type="color"], input[type="text"], select, input[type="number"] {
+            width: 100%;
+            padding: 8px 12px;
+            border-radius: 6px;
+            border: 1px solid #ced4da;
+            background: white;
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .sidebar, .properties-panel {
+                width: 240px;
+            }
+        }
+
+        /* Tutorial Overlay */
+        .tutorial-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            display: none;
+        }
+
+        .tutorial-card {
+            background: white;
+            width: 500px;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+
+        .tutorial-card h2 {
+            font-size: 28px;
+            margin-bottom: 15px;
+            color: var(--primary);
+        }
+
+        .tutorial-card p {
+            margin-bottom: 25px;
+            line-height: 1.6;
+            color: #495057;
+        }
+
+        .tutorial-card ul {
+            padding-left: 20px;
+            margin-bottom: 30px;
+        }
+
+        .tutorial-card li {
+            margin-bottom: 10px;
+        }
+
+        /* Footer */
+        footer {
+            background: var(--dark);
+            color: white;
+            text-align: center;
+            padding: 15px;
+            font-size: 14px;
+        }
+
+        /* Zoom controls */
+        .zoom-controls {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: white;
+            border-radius: 8px;
+            padding: 8px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            display: flex;
+            gap: 8px;
+            z-index: 50;
+        }
+
+        .zoom-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f0f2f5;
+            cursor: pointer;
+            font-size: 18px;
+            transition: all 0.2s;
+        }
+
+        .zoom-btn:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        .zoom-value {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            width: 60px;
+        }
+
+        /* Resize handles */
+        .resize-handle {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: var(--primary);
+            border: 1px solid white;
+            border-radius: 50%;
+            z-index: 10;
+            cursor: nwse-resize;
+        }
+
+        .resize-handle.nw {
+            top: -5px;
+            left: -5px;
+            cursor: nw-resize;
+        }
+        .resize-handle.ne {
+            top: -5px;
+            right: -5px;
+            cursor: ne-resize;
+        }
+        .resize-handle.sw {
+            bottom: -5px;
+            left: -5px;
+            cursor: sw-resize;
+        }
+        .resize-handle.se {
+            bottom: -5px;
+            right: -5px;
+            cursor: se-resize;
+        }
+
+        /* Templates Gallery */
+        .templates-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        .template-item {
+            border-radius: 8px;
+            overflow: hidden;
+            cursor: pointer;
+            height: 120px;
+            background: #f0f2f5;
+            position: relative;
+            transition: transform 0.3s;
+        }
+
+        .template-item:hover {
+            transform: translateY(-5px);
+        }
+
+        .template-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .template-name {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0,0,0,0.6);
+            color: white;
+            padding: 8px;
+            font-size: 12px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo">
+            <i class="fas fa-palette"></i>
+            <h1>ProDesign Editor</h1>
+        </div>
+        <div class="header-actions">
+            <button class="btn btn-outline" id="help-btn">
+                <i class="fas fa-question-circle"></i> Help
+            </button>
+            <button class="btn btn-outline" id="save-btn">
+                <i class="fas fa-save"></i> Save
+            </button>
+            <button class="btn btn-primary" id="export-btn">
+                <i class="fas fa-download"></i> Export
+            </button>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- Left Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-section">
+                <h2><i class="fas fa-tools"></i> Tools</h2>
+                <div class="tools-grid">
+                    <div class="tool active" data-tool="select">
+                        <i class="fas fa-mouse-pointer"></i>
+                        <span>Select</span>
+                    </div>
+                    <div class="tool" data-tool="text">
+                        <i class="fas fa-font"></i>
+                        <span>Text</span>
+                    </div>
+                    <div class="tool" data-tool="rectangle">
+                        <i class="fas fa-square"></i>
+                        <span>Rectangle</span>
+                    </div>
+                    <div class="tool" data-tool="circle">
+                        <i class="fas fa-circle"></i>
+                        <span>Circle</span>
+                    </div>
+                    <div class="tool" data-tool="line">
+                        <i class="fas fa-minus"></i>
+                        <span>Line</span>
+                    </div>
+                    <div class="tool" data-tool="image">
+                        <i class="fas fa-image"></i>
+                        <span>Image</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sidebar-section">
+                <h2><i class="fas fa-shapes"></i> Elements</h2>
+                <div class="elements-list">
+                    <div class="element-item" data-element="text">
+                        <i class="fas fa-text-height"></i>
+                        <span>Text Box</span>
+                    </div>
+                    <div class="element-item" data-element="rectangle">
+                        <i class="fas fa-square"></i>
+                        <span>Rectangle</span>
+                    </div>
+                    <div class="element-item" data-element="circle">
+                        <i class="fas fa-circle"></i>
+                        <span>Circle</span>
+                    </div>
+                    <div class="element-item" data-element="image">
+                        <i class="fas fa-image"></i>
+                        <span>Image Placeholder</span>
+                    </div>
+                    <div class="element-item" data-element="button">
+                        <i class="fas fa-square"></i>
+                        <span>Button</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sidebar-section">
+                <h2><i class="fas fa-images"></i> Templates</h2>
+                <div class="templates-grid">
+                    <div class="template-item" data-template="social">
+                        <div style="background: linear-gradient(135deg, #4361ee, #4cc9f0); height: 100%; display: flex; align-items: center; justify-content: center;">
+                            <div style="color: white; text-align: center; padding: 10px;">
+                                <div style="font-size: 18px; font-weight: bold;">Social Media</div>
+                                <div style="font-size: 14px;">1080x1080</div>
+                            </div>
+                        </div>
+                        <div class="template-name">Social Media Post</div>
+                    </div>
+                    <div class="template-item" data-template="presentation">
+                        <div style="background: linear-gradient(135deg, #f8961e, #f72585); height: 100%; display: flex; align-items: center; justify-content: center;">
+                            <div style="color: white; text-align: center; padding: 10px;">
+                                <div style="font-size: 18px; font-weight: bold;">Presentation</div>
+                                <div style="font-size: 14px;">1920x1080</div>
+                            </div>
+                        </div>
+                        <div class="template-name">Presentation Slide</div>
+                    </div>
+                    <div class="template-item" data-template="card">
+                        <div style="background: linear-gradient(135deg, #2b2d42, #6c757d); height: 100%; display: flex; align-items: center; justify-content: center;">
+                            <div style="color: white; text-align: center; padding: 10px;">
+                                <div style="font-size: 18px; font-weight: bold;">Business Card</div>
+                                <div style="font-size: 14px;">3.5x2 in</div>
+                            </div>
+                        </div>
+                        <div class="template-name">Business Card</div>
+                    </div>
+                    <div class="template-item" data-template="flyer">
+                        <div style="background: linear-gradient(135deg, #4895ef, #3f37c9); height: 100%; display: flex; align-items: center; justify-content: center;">
+                            <div style="color: white; text-align: center; padding: 10px;">
+                                <div style="font-size: 18px; font-weight: bold;">Flyer</div>
+                                <div style="font-size: 14px;">8.5x11 in</div>
+                            </div>
+                        </div>
+                        <div class="template-name">Flyer</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Canvas Area -->
+        <div class="canvas-container">
+            <div class="canvas-toolbar">
+                <div class="toolbar-group">
+                    <h3>File:</h3>
+                    <button class="toolbar-btn" id="new-btn"><i class="fas fa-plus"></i></button>
+                    <button class="toolbar-btn" id="open-btn"><i class="fas fa-folder-open"></i></button>
+                    <button class="toolbar-btn" id="save-toolbar-btn"><i class="fas fa-save"></i></button>
+                </div>
+                
+                <div class="toolbar-group">
+                    <h3>Edit:</h3>
+                    <button class="toolbar-btn" id="undo-btn"><i class="fas fa-undo"></i></button>
+                    <button class="toolbar-btn" id="redo-btn"><i class="fas fa-redo"></i></button>
+                    <button class="toolbar-btn" id="copy-btn"><i class="fas fa-copy"></i></button>
+                    <button class="toolbar-btn" id="delete-btn"><i class="fas fa-trash-alt"></i></button>
+                </div>
+                
+                <div class="toolbar-group">
+                    <h3>Arrange:</h3>
+                    <button class="toolbar-btn" id="bring-forward"><i class="fas fa-arrow-up"></i></button>
+                    <button class="toolbar-btn" id="send-backward"><i class="fas fa-arrow-down"></i></button>
+                    <button class="toolbar-btn" id="group-btn"><i class="fas fa-object-group"></i></button>
+                    <button class="toolbar-btn" id="ungroup-btn"><i class="fas fa-object-ungroup"></i></button>
+                </div>
+
+                <div class="toolbar-group">
+                    <h3>Align:</h3>
+                    <button class="toolbar-btn" id="align-left"><i class="fas fa-align-left"></i></button>
+                    <button class="toolbar-btn" id="align-center"><i class="fas fa-align-center"></i></button>
+                    <button class="toolbar-btn" id="align-right"><i class="fas fa-align-right"></i></button>
+                </div>
+            </div>
+
+            <div class="canvas-area">
+                <div class="canvas" id="design-canvas">
+                    <!-- Elements will be added here dynamically -->
+                    <div class="element text-element selected" style="top: 50px; left: 100px; font-size: 24px; color: #2b2d42; font-weight: 700;">
+                        Welcome to ProDesign Editor
+                    </div>
+                    <div class="element shape rectangle" style="top: 150px; left: 300px; background: #4895ef; width: 200px; height: 150px;"></div>
+                    <div class="element shape circle" style="top: 150px; left: 550px; background: #4cc9f0; width: 150px; height: 150px;"></div>
+                    <div class="element image-element" style="top: 350px; left: 200px; width: 200px; height: 150px;">
+                        <i class="fas fa-image"></i>
+                    </div>
+                    <div class="element text-element" style="top: 360px; left: 450px; font-size: 16px; color: #2b2d42;">
+                        Drag me to move
+                    </div>
+                </div>
+            </div>
+
+            <!-- Zoom Controls -->
+            <div class="zoom-controls">
+                <div class="zoom-btn" id="zoom-out">
+                    <i class="fas fa-minus"></i>
+                </div>
+                <div class="zoom-value" id="zoom-value">100%</div>
+                <div class="zoom-btn" id="zoom-in">
+                    <i class="fas fa-plus"></i>
+                </div>
+                <div class="zoom-btn" id="zoom-reset">
+                    <i class="fas fa-sync-alt"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Properties Panel -->
+        <div class="properties-panel" id="properties-panel">
+            <div class="panel-header">
+                <h2>Properties</h2>
+                <i class="fas fa-cog"></i>
+            </div>
+
+            <div class="property-group" id="text-properties">
+                <h3><i class="fas fa-text-height"></i> Text</h3>
+                <div class="property-row">
+                    <div class="property-label">Content</div>
+                    <div class="property-control">
+                        <input type="text" id="text-content" value="Welcome to ProDesign Editor">
+                    </div>
+                </div>
+                <div class="property-row">
+                    <div class="property-label">Font</div>
+                    <div class="property-control">
+                        <select id="font-family">
+                            <option>Arial</option>
+                            <option selected>Segoe UI</option>
+                            <option>Roboto</option>
+                            <option>Open Sans</option>
+                            <option>Montserrat</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="property-row">
+                    <div class="property-label">Size</div>
+                    <div class="property-control">
+                        <input type="range" id="font-size" min="8" max="72" value="24">
+                    </div>
+                </div>
+                <div class="property-row">
+                    <div class="property-label">Color</div>
+                    <div class="property-control">
+                        <input type="color" id="text-color" value="#2b2d42">
+                    </div>
+                </div>
+                <div class="property-row">
+                    <div class="property-label">Weight</div>
+                    <div class="property-control">
+                        <select id="font-weight">
+                            <option>Normal</option>
+                            <option selected>Bold</option>
+                            <option>Bolder</option>
+                            <option>Lighter</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="property-group" id="appearance-properties">
+                <h3><i class="fas fa-paint-brush"></i> Appearance</h3>
+                <div class="property-row">
+                    <div class="property-label">Background</div>
+                    <div class="property-control">
+                        <input type="color" id="bg-color" value="#4895ef">
+                    </div>
+                </div>
+                <div class="property-row">
+                    <div class="property-label">Opacity</div>
+                    <div class="property-control">
+                        <input type="range" id="opacity" min="0" max="100" value="100">
+                    </div>
+                </div>
+                <div class="property-row">
+                    <div class="property-label">Border</div>
+                    <div class="property-control">
+                        <input type="color" id="border-color" value="#4361ee">
+                    </div>
+                </div>
+                <div class="property-row">
+                    <div class="property-label">Width</div>
+                    <div class="property-control">
+                        <input type="range" id="border-width" min="0" max="10" value="0">
+                    </div>
+                </div>
+            </div>
+
+            <div class="property-group" id="position-properties">
+                <h3><i class="fas fa-arrows-alt"></i> Position & Size</h3>
+                <div class="property-row">
+                    <div class="property-label">X Position</div>
+                    <div class="property-control">
+                        <input type="number" id="pos-x" value="100">
+                    </div>
+                </div>
+                <div class="property-row">
+                    <div class="property-label">Y Position</div>
+                    <div class="property-control">
+                        <input type="number" id="pos-y" value="50">
+                    </div>
+                </div>
+                <div class="property-row">
+                    <div class="property-label">Width</div>
+                    <div class="property-control">
+                        <input type="number" id="width" value="200">
+                    </div>
+                </div>
+                <div class="property-row">
+                    <div class="property-label">Height</div>
+                    <div class="property-control">
+                        <input type="number" id="height" value="150">
+                    </div>
+                </div>
+                <div class="property-row">
+                    <div class="property-label">Rotation</div>
+                    <div class="property-control">
+                        <input type="range" id="rotation" min="0" max="360" value="0">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tutorial Overlay -->
+    <div class="tutorial-overlay" id="tutorial-overlay">
+        <div class="tutorial-card">
+            <h2>Welcome to ProDesign Editor</h2>
+            <p>Create professional designs with our easy-to-use editor. Here's how to get started:</p>
+            <ul>
+                <li><strong>Add elements</strong> - Choose from the left sidebar to add text, shapes, or images</li>
+                <li><strong>Move elements</strong> - Click and drag any element to reposition it</li>
+                <li><strong>Resize elements</strong> - Use the corner handles to resize elements</li>
+                <li><strong>Customize</strong> - Use the properties panel on the right to adjust styling</li>
+                <li><strong>Export</strong> - Download your design when finished</li>
+                <li><strong>Templates</strong> - Start with pre-designed templates for faster workflow</li>
+            </ul>
+            <button class="btn btn-primary" id="close-tutorial">
+                <i class="fas fa-check"></i> Start Designing
+            </button>
+        </div>
+    </div>
+
+    <footer>
+        <p>ProDesign Editor &copy; 2023 | Professional Visual Editor with Canva and Edit.org features</p>
+    </footer>
+
+    <script>
+        // Global variables
+        let isDragging = false;
+        let isResizing = false;
+        let currentElement = null;
+        let offsetX, offsetY;
+        let selectedElement = null;
+        let zoomLevel = 1;
+        let resizeHandle = null;
+
+        // DOM elements
+        const canvas = document.getElementById('design-canvas');
+        const elements = document.querySelectorAll('.element');
+        const tools = document.querySelectorAll('.tool');
+        const elementItems = document.querySelectorAll('.element-item');
+        const templateItems = document.querySelectorAll('.template-item');
+        const tutorialOverlay = document.getElementById('tutorial-overlay');
+        const helpBtn = document.getElementById('help-btn');
+        const closeTutorial = document.getElementById('close-tutorial');
+        const deleteBtn = document.getElementById('delete-btn');
+        const saveBtn = document.getElementById('save-btn');
+        const exportBtn = document.getElementById('export-btn');
+        const newBtn = document.getElementById('new-btn');
+        const zoomInBtn = document.getElementById('zoom-in');
+        const zoomOutBtn = document.getElementById('zoom-out');
+        const zoomResetBtn = document.getElementById('zoom-reset');
+        const zoomValue = document.getElementById('zoom-value');
+
+        // Initialize the editor
+        function initEditor() {
+            // Set up event listeners
+            helpBtn.addEventListener('click', () => {
+                tutorialOverlay.style.display = 'flex';
+            });
+            
+            closeTutorial.addEventListener('click', () => {
+                tutorialOverlay.style.display = 'none';
+            });
+            
+            // Tool selection
+            tools.forEach(tool => {
+                tool.addEventListener('click', () => {
+                    // Remove active class from all tools
+                    tools.forEach(t => t.classList.remove('active'));
+                    // Add active class to clicked tool
+                    tool.classList.add('active');
+                });
+            });
+            
+            // Element selection
+            canvas.addEventListener('click', (e) => {
+                if (e.target === canvas) {
+                    // Clicked on canvas, deselect all
+                    document.querySelectorAll('.element').forEach(el => {
+                        el.classList.remove('selected');
+                    });
+                    selectedElement = null;
+                    updatePropertiesPanel();
+                }
+            });
+            
+            // Add new elements
+            elementItems.forEach(item => {
+                item.addEventListener('click', () => {
+                    const type = item.getAttribute('data-element');
+                    addNewElement(type);
+                });
+            });
+            
+            // Load templates
+            templateItems.forEach(item => {
+                item.addEventListener('click', () => {
+                    const type = item.getAttribute('data-template');
+                    loadTemplate(type);
+                });
+            });
+            
+            // Delete button
+            deleteBtn.addEventListener('click', deleteSelectedElement);
+            
+            // Save and export buttons
+            saveBtn.addEventListener('click', saveDesign);
+            exportBtn.addEventListener('click', exportDesign);
+            newBtn.addEventListener('click', newDesign);
+            
+            // Zoom controls
+            zoomInBtn.addEventListener('click', () => zoomCanvas(0.1));
+            zoomOutBtn.addEventListener('click', () => zoomCanvas(-0.1));
+            zoomResetBtn.addEventListener('click', () => resetZoom());
+            
+            // Set up initial drag functionality for existing elements
+            document.querySelectorAll('.element').forEach(element => {
+                setupElement(element);
+                addResizeHandles(element);
+            });
+            
+            // Set up property change listeners
+            setupPropertyListeners();
+            
+            // Show tutorial on first load
+            setTimeout(() => {
+                tutorialOverlay.style.display = 'flex';
+            }, 1000);
+        }
+        
+        // Set up element with event listeners
+        function setupElement(element) {
+            element.addEventListener('mousedown', startDrag);
+            element.addEventListener('click', (e) => {
+                e.stopPropagation();
+                selectElement(element);
+            });
+        }
+        
+        // Add resize handles to an element
+        function addResizeHandles(element) {
+            if (!element.classList.contains('text-element')) {
+                const positions = ['nw', 'ne', 'sw', 'se'];
+                
+                positions.forEach(pos => {
+                    const handle = document.createElement('div');
+                    handle.className = `resize-handle ${pos}`;
+                    handle.addEventListener('mousedown', (e) => startResize(e, element, pos));
+                    element.appendChild(handle);
+                });
+            }
+        }
+        
+        // Start dragging an element
+        function startDrag(e) {
+            if (e.target.classList.contains('element') || 
+                e.target.classList.contains('text-element')) {
+                isDragging = true;
+                currentElement = e.target.classList.contains('element') ? 
+                    e.target : e.target.parentElement;
+                
+                // Calculate offset
+                const rect = currentElement.getBoundingClientRect();
+                offsetX = e.clientX - rect.left;
+                offsetY = e.clientY - rect.top;
+                
+                // Select the element if not already selected
+                if (!currentElement.classList.contains('selected')) {
+                    selectElement(currentElement);
+                }
+            }
+        }
+        
+        // Start resizing an element
+        function startResize(e, element, handlePosition) {
+            e.stopPropagation();
+            isResizing = true;
+            currentElement = element;
+            resizeHandle = handlePosition;
+            
+            // Select the element if not already selected
+            if (!currentElement.classList.contains('selected')) {
+                selectElement(currentElement);
+            }
+        }
+        
+        // Handle mouse move for dragging and resizing
+        document.addEventListener('mousemove', (e) => {
+            if (isDragging && currentElement) {
+                // Calculate new position
+                const canvasRect = canvas.getBoundingClientRect();
+                const x = e.clientX - offsetX - canvasRect.left;
+                const y = e.clientY - offsetY - canvasRect.top;
+                
+                // Apply new position
+                currentElement.style.left = `${x}px`;
+                currentElement.style.top = `${y}px`;
+                
+                // Update properties panel
+                updatePositionProperties();
+            }
+            
+            if (isResizing && currentElement && resizeHandle) {
+                const rect = currentElement.getBoundingClientRect();
+                const canvasRect = canvas.getBoundingClientRect();
+                
+                let newWidth = rect.width;
+                let newHeight = rect.height;
+                
+                // Calculate new size based on handle position
+                switch(resizeHandle) {
+                    case 'se':
+                        newWidth = e.clientX - rect.left;
+                        newHeight = e.clientY - rect.top;
+                        break;
+                    case 'sw':
+                        newWidth = rect.right - e.clientX;
+                        newHeight = e.clientY - rect.top;
+                        currentElement.style.left = `${e.clientX - canvasRect.left}px`;
+                        break;
+                    case 'ne':
+                        newWidth = e.clientX - rect.left;
+                        newHeight = rect.bottom - e.clientY;
+                        currentElement.style.top = `${e.clientY - canvasRect.top}px`;
+                        break;
+                    case 'nw':
+                        newWidth = rect.right - e.clientX;
+                        newHeight = rect.bottom - e.clientY;
+                        currentElement.style.left = `${e.clientX - canvasRect.left}px`;
+                        currentElement.style.top = `${e.clientY - canvasRect.top}px`;
+                        break;
+                }
+                
+                // Apply new size
+                currentElement.style.width = `${Math.max(20, newWidth)}px`;
+                currentElement.style.height = `${Math.max(20, newHeight)}px`;
+                
+                // Update properties panel
+                updateSizeProperties();
+            }
+        });
+        
+        // Stop dragging or resizing
+        document.addEventListener('mouseup', () => {
+            if (isDragging && currentElement) {
+                isDragging = false;
+                currentElement = null;
+            }
+            
+            if (isResizing) {
+                isResizing = false;
+                currentElement = null;
+                resizeHandle = null;
+            }
+        });
+        
+        // Select an element
+        function selectElement(element) {
+            // Remove selected class from all elements
+            document.querySelectorAll('.element').forEach(el => {
+                el.classList.remove('selected');
+            });
+            
+            // Add selected class to clicked element
+            element.classList.add('selected');
+            selectedElement = element;
+            
+            // Update properties panel
+            updatePropertiesPanel();
+        }
+        
+        // Add a new element to the canvas
+        function addNewElement(type) {
+            const canvasRect = canvas.getBoundingClientRect();
+            const centerX = canvasRect.width / 2 - 100;
+            const centerY = canvasRect.height / 2 - 75;
+            
+            let newElement = document.createElement('div');
+            newElement.className = 'element';
+            
+            switch(type) {
+                case 'text':
+                    newElement.classList.add('text-element');
+                    newElement.style.left = `${centerX}px`;
+                    newElement.style.top = `${centerY}px`;
+                    newElement.textContent = 'New Text';
+                    newElement.style.fontSize = '18px';
+                    newElement.style.color = '#2b2d42';
+                    newElement.contentEditable = true;
+                    break;
+                    
+                case 'rectangle':
+                    newElement.classList.add('shape', 'rectangle');
+                    newElement.style.left = `${centerX}px`;
+                    newElement.style.top = `${centerY}px`;
+                    newElement.style.backgroundColor = '#f72585';
+                    newElement.style.width = '200px';
+                    newElement.style.height = '150px';
+                    break;
+                    
+                case 'circle':
+                    newElement.classList.add('shape', 'circle');
+                    newElement.style.left = `${centerX}px`;
+                    newElement.style.top = `${centerY}px`;
+                    newElement.style.backgroundColor = '#f8961e';
+                    newElement.style.width = '150px';
+                    newElement.style.height = '150px';
+                    newElement.style.borderRadius = '50%';
+                    break;
+                    
+                case 'image':
+                    newElement.classList.add('image-element');
+                    newElement.style.left = `${centerX}px`;
+                    newElement.style.top = `${centerY}px`;
+                    newElement.style.width = '200px';
+                    newElement.style.height = '150px';
+                    newElement.innerHTML = '<i class="fas fa-image"></i>';
+                    break;
+                    
+                case 'button':
+                    newElement.classList.add('shape', 'rectangle');
+                    newElement.style.left = `${centerX}px`;
+                    newElement.style.top = `${centerY}px`;
+                    newElement.style.backgroundColor = '#4361ee';
+                    newElement.style.width = '150px';
+                    newElement.style.height = '50px';
+                    newElement.style.display = 'flex';
+                    newElement.style.alignItems = 'center';
+                    newElement.style.justifyContent = 'center';
+                    newElement.style.color = 'white';
+                    newElement.style.fontWeight = '600';
+                    newElement.textContent = 'Button';
+                    break;
+            }
+            
+            // Add element to canvas
+            canvas.appendChild(newElement);
+            
+            // Set up event listeners
+            setupElement(newElement);
+            
+            // Add resize handles for non-text elements
+            if (type !== 'text') {
+                addResizeHandles(newElement);
+            }
+            
+            // Select the new element
+            selectElement(newElement);
+        }
+        
+        // Load a template
+        function loadTemplate(type) {
+            // Clear canvas
+            canvas.innerHTML = '';
+            
+            // Add template-specific elements
+            switch(type) {
+                case 'social':
+                    addNewElement('rectangle');
+                    addNewElement('text');
+                    selectedElement.style.left = '150px';
+                    selectedElement.style.top = '150px';
+                    selectedElement.style.fontSize = '32px';
+                    selectedElement.style.color = 'white';
+                    selectedElement.style.fontWeight = '700';
+                    selectedElement.textContent = 'Social Media Post';
+                    selectedElement.style.backgroundColor = '#4361ee';
+                    break;
+                    
+                case 'presentation':
+                    addNewElement('rectangle');
+                    selectedElement.style.backgroundColor = '#f0f2f5';
+                    selectedElement.style.width = '700px';
+                    selectedElement.style.height = '400px';
+                    selectedElement.style.left = '50px';
+                    selectedElement.style.top = '50px';
+                    
+                    addNewElement('text');
+                    selectedElement.style.left = '100px';
+                    selectedElement.style.top = '100px';
+                    selectedElement.style.fontSize = '36px';
+                    selectedElement.style.color = '#2b2d42';
+                    selectedElement.textContent = 'Presentation Title';
+                    
+                    addNewElement('text');
+                    selectedElement.style.left = '100px';
+                    selectedElement.style.top = '180px';
+                    selectedElement.style.fontSize = '24px';
+                    selectedElement.style.color = '#6c757d';
+                    selectedElement.textContent = 'Subtitle or key points';
+                    break;
+                    
+                case 'card':
+                    addNewElement('rectangle');
+                    selectedElement.style.backgroundColor = '#2b2d42';
+                    selectedElement.style.width = '350px';
+                    selectedElement.style.height = '200px';
+                    selectedElement.style.left = '225px';
+                    selectedElement.style.top = '150px';
+                    
+                    addNewElement('text');
+                    selectedElement.style.left = '250px';
+                    selectedElement.style.top = '170px';
+                    selectedElement.style.fontSize = '24px';
+                    selectedElement.style.color = 'white';
+                    selectedElement.textContent = 'John Doe';
+                    
+                    addNewElement('text');
+                    selectedElement.style.left = '250px';
+                    selectedElement.style.top = '210px';
+                    selectedElement.style.fontSize = '18px';
+                    selectedElement.style.color = '#adb5bd';
+                    selectedElement.textContent = 'Creative Director';
+                    
+                    addNewElement('text');
+                    selectedElement.style.left = '250px';
+                    selectedElement.style.top = '250px';
+                    selectedElement.style.fontSize = '16px';
+                    selectedElement.style.color = '#adb5bd';
+                    selectedElement.textContent = 'contact@example.com';
+                    break;
+                    
+                case 'flyer':
+                    addNewElement('rectangle');
+                    selectedElement.style.backgroundColor = '#4895ef';
+                    selectedElement.style.width = '600px';
+                    selectedElement.style.height = '400px';
+                    selectedElement.style.left = '100px';
+                    selectedElement.style.top = '50px';
+                    
+                    addNewElement('text');
+                    selectedElement.style.left = '200px';
+                    selectedElement.style.top = '100px';
+                    selectedElement.style.fontSize = '42px';
+                    selectedElement.style.color = 'white';
+                    selectedElement.style.fontWeight = '700';
+                    selectedElement.textContent = 'SUMMER SALE';
+                    
+                    addNewElement('text');
+                    selectedElement.style.left = '200px';
+                    selectedElement.style.top = '180px';
+                    selectedElement.style.fontSize = '28px';
+                    selectedElement.style.color = 'white';
+                    selectedElement.textContent = 'Up to 50% OFF';
+                    
+                    addNewElement('text');
+                    selectedElement.style.left = '200px';
+                    selectedElement.style.top = '300px';
+                    selectedElement.style.fontSize = '20px';
+                    selectedElement.style.color = 'white';
+                    selectedElement.textContent = 'Visit our store for amazing deals!';
+                    break;
+            }
+        }
+        
+        // Delete the selected element
+        function deleteSelectedElement() {
+            if (selectedElement) {
+                selectedElement.remove();
+                selectedElement = null;
+                updatePropertiesPanel();
+            }
+        }
+        
+        // Update properties panel based on selected element
+        function updatePropertiesPanel() {
+            const panel = document.getElementById('properties-panel');
+            
+            if (!selectedElement) {
+                // Hide properties if no element is selected
+                panel.style.display = 'none';
+                return;
+            }
+            
+            panel.style.display = 'block';
+            
+            // Update text properties if it's a text element
+            if (selectedElement.classList.contains('text-element')) {
+                document.getElementById('text-content').value = selectedElement.textContent;
+                document.getElementById('font-size').value = parseInt(selectedElement.style.fontSize);
+                document.getElementById('text-color').value = rgbToHex(selectedElement.style.color);
+                
+                const fontWeight = selectedElement.style.fontWeight || 'bold';
+                document.getElementById('font-weight').value = fontWeight === '700' ? 'Bold' : fontWeight;
+            }
+            
+            // Update appearance properties for shapes
+            if (selectedElement.classList.contains('shape')) {
+                document.getElementById('bg-color').value = rgbToHex(selectedElement.style.backgroundColor);
+            }
+            
+            // Update position properties
+            updatePositionProperties();
+            updateSizeProperties();
+        }
+        
+        // Update position properties
+        function updatePositionProperties() {
+            if (!selectedElement) return;
+            
+            const left = parseInt(selectedElement.style.left) || 0;
+            const top = parseInt(selectedElement.style.top) || 0;
+            
+            document.getElementById('pos-x').value = left;
+            document.getElementById('pos-y').value = top;
+        }
+        
+        // Update size properties
+        function updateSizeProperties() {
+            if (!selectedElement) return;
+            
+            const width = parseInt(selectedElement.style.width) || 0;
+            const height = parseInt(selectedElement.style.height) || 0;
+            
+            document.getElementById('width').value = width;
+            document.getElementById('height').value = height;
+        }
+        
+        // Set up property change listeners
+        function setupPropertyListeners() {
+            // Text content
+            document.getElementById('text-content').addEventListener('input', (e) => {
+                if (selectedElement && selectedElement.classList.contains('text-element')) {
+                    selectedElement.textContent = e.target.value;
+                }
+            });
+            
+            // Font size
+            document.getElementById('font-size').addEventListener('input', (e) => {
+                if (selectedElement && selectedElement.classList.contains('text-element')) {
+                    selectedElement.style.fontSize = `${e.target.value}px`;
+                }
+            });
+            
+            // Text color
+            document.getElementById('text-color').addEventListener('input', (e) => {
+                if (selectedElement && selectedElement.classList.contains('text-element')) {
+                    selectedElement.style.color = e.target.value;
+                }
+            });
+            
+            // Font weight
+            document.getElementById('font-weight').addEventListener('change', (e) => {
+                if (selectedElement && selectedElement.classList.contains('text-element')) {
+                    selectedElement.style.fontWeight = e.target.value === 'Bold' ? '700' : '400';
+                }
+            });
+            
+            // Background color
+            document.getElementById('bg-color').addEventListener('input', (e) => {
+                if (selectedElement && selectedElement.classList.contains('shape')) {
+                    selectedElement.style.backgroundColor = e.target.value;
+                }
+            });
+            
+            // Position X
+            document.getElementById('pos-x').addEventListener('change', (e) => {
+                if (selectedElement) {
+                    selectedElement.style.left = `${e.target.value}px`;
+                }
+            });
+            
+            // Position Y
+            document.getElementById('pos-y').addEventListener('change', (e) => {
+                if (selectedElement) {
+                    selectedElement.style.top = `${e.target.value}px`;
+                }
+            });
+            
+            // Width
+            document.getElementById('width').addEventListener('change', (e) => {
+                if (selectedElement && !selectedElement.classList.contains('text-element')) {
+                    selectedElement.style.width = `${e.target.value}px`;
+                }
+            });
+            
+            // Height
+            document.getElementById('height').addEventListener('change', (e) => {
+                if (selectedElement && !selectedElement.classList.contains('text-element')) {
+                    selectedElement.style.height = `${e.target.value}px`;
+                }
+            });
+        }
+        
+        // Convert RGB to hex
+        function rgbToHex(rgb) {
+            if (!rgb) return '#000000';
+            
+            // Extract numbers from string
+            const match = rgb.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/);
+            if (!match) return '#000000';
+            
+            const r = parseInt(match[1]);
+            const g = parseInt(match[2]);
+            const b = parseInt(match[3]);
+            
+            return '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+        }
+        
+        // Zoom the canvas
+        function zoomCanvas(amount) {
+            zoomLevel += amount;
+            zoomLevel = Math.max(0.5, Math.min(zoomLevel, 2));
+            canvas.style.transform = `scale(${zoomLevel})`;
+            zoomValue.textContent = `${Math.round(zoomLevel * 100)}%`;
+        }
+        
+        // Reset zoom
+        function resetZoom() {
+            zoomLevel = 1;
+            canvas.style.transform = 'scale(1)';
+            zoomValue.textContent = '100%';
+        }
+        
+        // Save design
+        function saveDesign() {
+            alert('Design saved successfully!');
+        }
+        
+        // Export design
+        function exportDesign() {
+            alert('Exporting design as PNG...');
+            // In a real app, this would save as PNG or PDF
+        }
+        
+        // Create new design
+        function newDesign() {
+            if (confirm('Are you sure you want to create a new design? All unsaved changes will be lost.')) {
+                // Clear canvas
+                canvas.innerHTML = '';
+                selectedElement = null;
+                updatePropertiesPanel();
+            }
+        }
+        
+        // Initialize the editor when the page loads
+        window.addEventListener('DOMContentLoaded', initEditor);
+    </script>
+</body>
+</html>
